@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JCM — Inventario de Cilindros</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-brand">
+    <div class="brand-logo">JCM</div>
+    <div class="brand-text">
+      <span class="brand-name">JCM Gas</span>
+      <span class="brand-sub">Control de Inventario de Cilindros</span>
+    </div>
+  </div>
+  <span class="header-clock" id="fecha-hora"></span>
+</header>
+
+<!-- ══ NAV ═════════════════════════════════════════════════════════════════ -->
+<nav class="site-nav">
+  <button class="nav-btn active" data-section="sec-inventario">&#x1F4E6; Inventario</button>
+  <button class="nav-btn" data-section="sec-movimientos">&#x1F504; Movimientos</button>
+  <button class="nav-btn" data-section="sec-historial">&#x1F4CB; Historial</button>
+  <button class="nav-btn" data-section="sec-config">&#x2699;&#xFE0F; Configuraci&#xF3;n</button>
+</nav>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
+<main class="site-main">
+
+  <!-- ── INVENTARIO ──────────────────────────────────────────────────────── -->
+  <section id="sec-inventario" class="section active">
+    <div class="section-header">
+      <h2 class="section-title">Estado del Inventario</h2>
+      <button class="btn btn-secondary btn-sm" onclick="App.refreshInventario()">&#x21BB; Actualizar</button>
+    </div>
+
+    <!-- Resumen de bodega -->
+    <div id="summary-cards" class="summary-grid"></div>
+
+    <!-- Tabla completa -->
+    <div class="card">
+      <div class="card-header">
+        <span>Inventario Completo &mdash; Todas las Ubicaciones</span>
+        <div class="filter-btns">
+          <button class="filter-btn active" data-filter="all">Todas</button>
+          <button class="filter-btn" data-filter="bodega">Bodega</button>
+          <button class="filter-btn" data-filter="cliente">Clientes</button>
+          <button class="filter-btn" data-filter="proveedor">Proveedores</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ubicaci&#xF3;n</th>
+              <th>Entidad</th>
+              <th>Gas</th>
+              <th>Propiedad</th>
+              <th>Estado</th>
+              <th class="col-num">Cantidad</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-inventario">
+            <tr><td colspan="6" class="loading-msg">Cargando&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MOVIMIENTOS ─────────────────────────────────────────────────────── -->
+  <section id="sec-movimientos" class="section">
+    <div class="section-header">
+      <h2 class="section-title">Registrar Movimiento</h2>
+    </div>
+
+    <div class="card">
+      <!-- Selector de tipo -->
+      <div class="form-group" style="margin-bottom:1.1rem">
+        <label class="form-label" for="mov-tipo">Tipo de Movimiento</label>
+        <select id="mov-tipo" class="form-select form-select-lg" onchange="App.onTipoChange()">
+          <option value="despacho">&#x1F69A; Despacho a Cliente</option>
+          <option value="retorno">&#x21A9;&#xFE0F; Retorno de Cliente</option>
+          <option value="intercambio">&#x1F501; Intercambio Proveedor 1 &mdash; Arrendados</option>
+          <option value="envio_proveedor">&#x1F4E4; Env&#xED;o a Proveedor 2 (Vac&#xED;os propios)</option>
+          <option value="retorno_proveedor">&#x1F4E5; Retorno de Proveedor 2 (Llenos propios)</option>
+          <option value="ajuste">&#x270F;&#xFE0F; Ajuste de Inventario</option>
+        </select>
+      </div>
+
+      <!-- Barra de información -->
+      <div id="mov-info" class="mov-info-bar"></div>
+
+      <!-- Formulario dinámico -->
+      <form id="form-movimiento" onsubmit="App.submitMovimiento(event)">
+        <div class="form-grid">
+
+          <!-- Cliente (despacho, retorno) -->
+          <div class="form-group" id="fg-cliente" style="display:none">
+            <label class="form-label" for="mov-cliente">Cliente</label>
+            <select id="mov-cliente" class="form-select"></select>
+          </div>
+
+          <!-- Ubicación (ajuste) -->
+          <div class="form-group" id="fg-ubicacion" style="display:none">
+            <label class="form-label" for="mov-ubicacion">Ubicaci&#xF3;n</label>
+            <select id="mov-ubicacion" class="form-select" onchange="App.onUbicacionAjusteChange()">
+              <option value="bodega">Bodega JCM</option>
+              <option value="cliente">Cliente</option>
+              <option value="proveedor">Proveedor</option>
+            </select>
+          </div>
+
+          <!-- Entidad ajuste (condicional) -->
+          <div class="form-group" id="fg-entidad-ajuste" style="display:none">
+            <label class="form-label" for="mov-entidad-ajuste">Entidad</label>
+            <select id="mov-entidad-ajuste" class="form-select"></select>
+          </div>
+
+          <!-- Gas (siempre visible) -->
+          <div class="form-group">
+            <label class="form-label" for="mov-gas">Tipo de Gas</label>
+            <select id="mov-gas" class="form-select"></select>
+          </div>
+
+          <!-- Propiedad (despacho, retorno, ajuste) -->
+          <div class="form-group" id="fg-propiedad" style="display:none">
+            <label class="form-label" for="mov-propiedad">Propiedad</label>
+            <select id="mov-propiedad" class="form-select">
+              <option value="propio">Propio</option>
+              <option value="arrendado">Arrendado</option>
+            </select>
+          </div>
+
+          <!-- Estado devuelto (retorno cliente) -->
+          <div class="form-group" id="fg-estado-ret" style="display:none">
+            <label class="form-label" for="mov-estado-ret">Estado devuelto</label>
+            <select id="mov-estado-ret" class="form-select">
+              <option value="vacio">Vac&#xED;o</option>
+              <option value="lleno">Lleno</option>
+            </select>
+          </div>
+
+          <!-- Estado (ajuste) -->
+          <div class="form-group" id="fg-estado-ajuste" style="display:none">
+            <label class="form-label" for="mov-estado-ajuste">Estado</label>
+            <select id="mov-estado-ajuste" class="form-select">
+              <option value="lleno">Lleno</option>
+              <option value="vacio">Vac&#xED;o</option>
+            </select>
+          </div>
+
+          <!-- Cantidad (siempre visible) -->
+          <div class="form-group">
+            <label class="form-label" for="mov-cantidad">Cantidad</label>
+            <input type="number" id="mov-cantidad" class="form-input" min="0" value="1" required />
+          </div>
+
+          <!-- Notas (siempre visible, fila completa) -->
+          <div class="form-group form-group-full">
+            <label class="form-label" for="mov-notas">Notas (opcional)</label>
+            <input type="text" id="mov-notas" class="form-input" placeholder="Ej: Factura #1234, cliente en sitio, etc." />
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-lg" id="btn-mov-submit">
+            Registrar Movimiento
+          </button>
+          <button type="button" class="btn btn-ghost" onclick="App.resetForm()">
+            Limpiar
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── HISTORIAL ───────────────────────────────────────────────────────── -->
+  <section id="sec-historial" class="section">
+    <div class="section-header">
+      <h2 class="section-title">Historial de Movimientos</h2>
+      <button class="btn btn-secondary btn-sm" onclick="App.loadHistorial()">&#x21BB; Actualizar</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Fecha</th>
+              <th>Tipo de Movimiento</th>
+              <th>Gas</th>
+              <th>Propiedad</th>
+              <th>Estado</th>
+              <th class="col-num">Cant.</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-historial">
+            <tr><td colspan="10" class="loading-msg">Cargando&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CONFIGURACIÓN ───────────────────────────────────────────────────── -->
+  <section id="sec-config" class="section">
+    <div class="section-header">
+      <h2 class="section-title">Configuraci&#xF3;n</h2>
+    </div>
+
+    <!-- Agregar cliente -->
+    <div class="card">
+      <h3 class="card-title">&#x2795; Agregar Nuevo Cliente</h3>
+      <form id="form-nuevo-cliente" onsubmit="App.submitNuevoCliente(event)">
+        <div class="form-row">
+          <div class="form-group" style="flex:1;max-width:360px">
+            <label class="form-label" for="nuevo-cliente-nombre">Nombre del cliente</label>
+            <input type="text" id="nuevo-cliente-nombre" class="form-input"
+                   placeholder="Ej: Empresa ABC S.A.S" required />
+          </div>
+          <div class="form-group" style="padding-top:1.45rem">
+            <button type="submit" class="btn btn-primary">Agregar cliente</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Lista clientes -->
+    <div class="card">
+      <div class="card-header">
+        <span>&#x1F465; Clientes Registrados</span>
+        <button class="btn btn-ghost btn-sm" onclick="App.loadCatalogos()">&#x21BB; Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th></tr></thead>
+          <tbody id="tbody-clientes">
+            <tr><td colspan="2" class="loading-msg">Cargando&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Lista proveedores -->
+    <div class="card">
+      <div class="card-header">
+        <span>&#x1F3ED; Proveedores Registrados</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th><th>Tipo de Operaci&#xF3;n</th></tr></thead>
+          <tbody id="tbody-proveedores">
+            <tr><td colspan="3" class="loading-msg">Cargando&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Toast de notificaciones -->
+<div id="toast" class="toast"></div>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
