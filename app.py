@@ -23,7 +23,17 @@ def get_template_folder():
     return os.path.join(base, "templates")
 
 
-app = Flask(__name__, template_folder=get_template_folder())
+def get_static_folder():
+    if getattr(sys, "frozen", False):
+        base = sys._MEIPASS
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, "static")
+
+
+app = Flask(__name__,
+            template_folder=get_template_folder(),
+            static_folder=get_static_folder())
 
 # ---------------------------------------------------------------------------
 # DB connection helpers
