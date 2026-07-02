@@ -1,0 +1,41 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Entornos virtuales (venv y Conda) ────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+# Conda: carpetas de entornos nombrados creados con `conda create -p ./env`
+envs/
+conda-env/
+.conda/
+
+# ── Variables de entorno ──────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+
+# ── Base de datos (nunca subir datos reales al repositorio) ──────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── PyInstaller ───────────────────────────────────────────────────────────────
+build/
+dist/
+*.spec
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+
+# ── Sistema operativo ─────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
