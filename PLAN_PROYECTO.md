@@ -23,10 +23,15 @@ Se distribuye como un `.exe` autocontenido (PyInstaller) que levanta un servidor
 ```
 JCM/
 ├── app.py                  # Servidor Flask + toda la lógica de negocio
+├── static/
+│   ├── css/
+│   │   └── styles.css      # Estilos visuales de la aplicación
+│   └── js/
+│       └── main.js         # Lógica Vanilla JS (Llamadas API REST y manipulación del DOM)
 ├── templates/
-│   └── index.html          # Interfaz completa (tabla de inventario + formularios)
+│   └── index.html          # Esqueleto principal y estructura de la interfaz
 ├── PLAN_PROYECTO.md        # Este documento
-└── build_exe.spec          # Spec de PyInstaller (generado con el comando indicado)
+└── build_exe.spec          # Spec de PyInstaller
 ```
 
 **Ruta de la base de datos en producción:**
