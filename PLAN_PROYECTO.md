@@ -87,7 +87,7 @@ CREATE TABLE proveedores (
 CREATE TABLE inventario_actual (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     ubicacion   TEXT NOT NULL CHECK(ubicacion IN ('bodega', 'cliente', 'proveedor')),
-    entidad_id  INTEGER,               -- NULL si ubicacion = 'bodega'
+    entidad_id INTEGER NOT NULL DEFAULT 0, -- 0 si ubicacion = 'bodega'
     gas_id      INTEGER NOT NULL REFERENCES catalogo_gases(id),
     propiedad   TEXT NOT NULL CHECK(propiedad IN ('propio', 'arrendado')),
     estado      TEXT NOT NULL CHECK(estado IN ('lleno', 'vacio')),
@@ -145,6 +145,10 @@ Ubicación:    Bodega  | Cliente | Proveedor
 | Proveedor 2 - Rellenos JCM | Recibe vacíos propios, devuelve llenos propios (diferido) |
 
 ### 5.3 Flujos de Movimiento
+
+**REGLA ESTRICTA DE SEGURIDAD (TRANSACCIONES):**
+Todos los pasos de un flujo de movimiento (los múltiples `UPDATE` e `INSERT`) deben ejecutarse obligatoriamente dentro de una única transacción SQL. 
+En Python/SQLite, esto significa que debes usar `conn.commit()` solo cuando todos los pasos del flujo hayan sido exitosos. Si ocurre algún error en Python durante el proceso, se debe capturar la excepción y ejecutar un `conn.rollback()` para cancelar todos los cambios y evitar que el inventario quede corrupto (por ejemplo, que se reste de bodega pero no se sume al cliente).
 
 #### Despacho a Cliente
 - **Entrada:** `gas_id`, `propiedad`, `cantidad`, `cliente_id`
@@ -227,7 +231,7 @@ Endpoint `POST /api/inventario/ajuste` permite establecer la cantidad de cualqui
 pip install flask pyinstaller
 
 # Compilar (ejecutar desde el directorio raíz del proyecto)
-pyinstaller --onefile --noconsole --name "JCM_Inventario" --add-data "templates;templates" app.py
+pyinstaller --onefile --noconsole --name "JCM_Inventario" --add-data "templates;templates" --add-data "static;static" app.py
 ```
 
 El `.exe` resultante queda en `dist/JCM_Inventario.exe`.  
