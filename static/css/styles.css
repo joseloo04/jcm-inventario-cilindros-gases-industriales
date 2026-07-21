@@ -159,10 +159,10 @@ body {
   margin-bottom: 1rem;
 }
 
-/* ── SUMMARY CARDS (Bodega) ───────────────────────────────────────────────── */
+/* ── SUMMARY CARDS (Bodega / Terreno) ─────────────────────────────────────── */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: .85rem;
   margin-bottom: 1.25rem;
 }
@@ -177,11 +177,36 @@ body {
 }
 .summary-card:hover { box-shadow: var(--sombra-md); transform: translateY(-1px); }
 
+.sc-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .7rem;
+}
 .sc-gas   { font-size: .75rem; font-weight: 700; color: var(--texto-sec); text-transform: uppercase; letter-spacing: .6px; }
-.sc-total { font-size: 2.1rem; font-weight: 800; color: var(--rojo); line-height: 1.1; margin: .2rem 0 .3rem; }
-.sc-detail { font-size: .78rem; color: var(--texto-sec); display: flex; gap: .5rem; flex-wrap: wrap; }
-.sc-lleno  { color: var(--verde); font-weight: 700; }
-.sc-vacio  { color: var(--naranja); font-weight: 700; }
+.sc-total { font-size: 1.5rem; font-weight: 800; color: var(--rojo); line-height: 1; }
+
+.sc-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.sc-half {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+.sc-half-bodega { border-right: 1px solid var(--gris-borde); padding-right: .6rem; }
+
+.sc-half-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: .1rem; }
+.sc-half-bodega .sc-half-label  { color: var(--rojo); }
+.sc-half-terreno .sc-half-label { color: var(--azul); }
+
+.sc-lleno  { color: var(--verde); font-weight: 700; font-size: .78rem; }
+.sc-vacio  { color: var(--naranja); font-weight: 700; font-size: .78rem; }
 
 /* ── TABLES ───────────────────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; border-radius: var(--r-sm); }
@@ -415,6 +440,10 @@ td.col-num {
   .site-main { padding: 0 .75rem; }
   .card { padding: 1rem; }
   .form-grid { grid-template-columns: 1fr; }
-  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .summary-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
   .filter-btns { gap: .3rem; }
+}
+
+@media (max-width: 480px) {
+  .summary-grid { grid-template-columns: 1fr; }
 }

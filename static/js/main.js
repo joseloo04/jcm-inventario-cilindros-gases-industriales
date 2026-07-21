@@ -176,7 +176,7 @@ const App = (() => {
         api('/api/inventario/bodega'),
         api('/api/inventario/completo'),
       ]);
-      renderSummaryCards(bodega);
+      renderSummaryCards(bodega, completo);
       state.inventarioData = completo;
       renderInventario();
     } catch (e) {
@@ -184,7 +184,7 @@ const App = (() => {
     }
   }
 
-  function renderSummaryCards(bodegaData) {
+  function renderSummaryCards(bodegaData, completoData) {
     const container = el('summary-cards');
 
     if (!bodegaData.length) {
@@ -197,23 +197,41 @@ const App = (() => {
     }
 
     const porGas = {};
-    for (const r of bodegaData) {
-      if (!porGas[r.gas]) porGas[r.gas] = { llenos: 0, vacios: 0 };
-      if (r.estado === 'lleno') porGas[r.gas].llenos += r.cantidad;
-      else                      porGas[r.gas].vacios += r.cantidad;
+    for (const r of completoData) {
+      if (!porGas[r.gas]) {
+        porGas[r.gas] = { bodegaLlenos: 0, bodegaVacios: 0, terrenoLlenos: 0, terrenoVacios: 0 };
+      }
+      const enBodega = r.ubicacion === 'bodega';
+      if (enBodega && r.estado === 'lleno')  porGas[r.gas].bodegaLlenos  += r.cantidad;
+      else if (enBodega)                     porGas[r.gas].bodegaVacios  += r.cantidad;
+      else if (r.estado === 'lleno')         porGas[r.gas].terrenoLlenos += r.cantidad;
+      else                                    porGas[r.gas].terrenoVacios += r.cantidad;
     }
 
     container.innerHTML = Object.entries(porGas)
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([gas, v]) => `
-        <div class="summary-card">
-          <div class="sc-gas">${gas}</div>
-          <div class="sc-total">${v.llenos + v.vacios}</div>
-          <div class="sc-detail">
-            <span class="sc-lleno">&#x25B2; ${v.llenos} llenos</span>
-            <span class="sc-vacio">&#x25BC; ${v.vacios} vac&iacute;os</span>
-          </div>
-        </div>`).join('');
+      .map(([gas, v]) => {
+        const total = v.bodegaLlenos + v.bodegaVacios + v.terrenoLlenos + v.terrenoVacios;
+        return `
+          <div class="summary-card">
+            <div class="sc-header">
+              <span class="sc-gas">${gas}</span>
+              <span class="sc-total">${total}</span>
+            </div>
+            <div class="sc-split">
+              <div class="sc-half sc-half-bodega">
+                <div class="sc-half-label">En Bodega</div>
+                <span class="sc-lleno">&#x25B2; ${v.bodegaLlenos} llenos</span>
+                <span class="sc-vacio">&#x25BC; ${v.bodegaVacios} vac&iacute;os</span>
+              </div>
+              <div class="sc-half sc-half-terreno">
+                <div class="sc-half-label">En Terreno</div>
+                <span class="sc-lleno">&#x25B2; ${v.terrenoLlenos} llenos</span>
+                <span class="sc-vacio">&#x25BC; ${v.terrenoVacios} vac&iacute;os</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
   }
 
   function renderInventario() {
