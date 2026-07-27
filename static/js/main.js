@@ -403,7 +403,7 @@ const App = (() => {
       case 'ajuste': {
         const ubicacion  = val('mov-ubicacion');
         const entidad_id = ubicacion === 'bodega' ? 0 : ival('mov-entidad-ajuste');
-        return { ubicacion, entidad_id, gas_id, propiedad: val('mov-propiedad'), estado: val('mov-estado-ajuste'), cantidad, notas };
+        return { ubicacion, entidad_id, gas_id, propiedad: val('mov-propiedad'), estado: val('mov-estado-ajuste'), nueva_cantidad: cantidad, notas };
       }
 
       default:
@@ -412,7 +412,7 @@ const App = (() => {
   }
 
   function validatePayload(tipo, payload) {
-    if (tipo === 'ajuste' && payload.cantidad < 0) return 'La cantidad no puede ser negativa en un ajuste.';
+    if (tipo === 'ajuste' && payload.nueva_cantidad < 0) return 'La cantidad no puede ser negativa en un ajuste.';
     if (tipo !== 'ajuste' && payload.cantidad < 1) return 'La cantidad debe ser al menos 1.';
     if ((tipo === 'despacho' || tipo === 'retorno') && isNaN(payload.cliente_id)) return 'Seleccione un cliente válido.';
     return null;
@@ -506,19 +506,18 @@ const App = (() => {
   }
 
   function buildAjustePayload() {
-    const ubicacion  = val('modal-ubicacion');
-    const entidad_id = ubicacion === 'bodega' ? 0 : ival('modal-entidad');
-    const gas_id      = ival('modal-gas');
-    const propiedad   = val('modal-propiedad');
-    const estado      = val('modal-estado');
-    const cantidad    = ival('modal-cantidad');
+    const ubicacion      = val('modal-ubicacion');
+    const entidad_id     = ubicacion === 'bodega' ? 0 : ival('modal-entidad');
+    const gas_id         = ival('modal-gas');
+    const propiedad      = val('modal-propiedad');
+    const estado         = val('modal-estado');
+    const nueva_cantidad = ival('modal-cantidad');
 
     if (isNaN(entidad_id)) throw new Error('Seleccione una entidad válida.');
     if (isNaN(gas_id))     throw new Error('Seleccione un gas válido.');
-    if (isNaN(cantidad) || cantidad < 0) throw new Error('Ingrese una cantidad válida (0 o mayor).');
+    if (isNaN(nueva_cantidad) || nueva_cantidad < 0) throw new Error('Ingrese una cantidad válida (0 o mayor).');
 
-    // El backend (/api/inventario/ajuste) espera la llave "cantidad".
-    return { ubicacion, entidad_id, gas_id, propiedad, estado, cantidad };
+    return { ubicacion, entidad_id, gas_id, propiedad, estado, nueva_cantidad };
   }
 
   async function submitAjusteModal(e) {

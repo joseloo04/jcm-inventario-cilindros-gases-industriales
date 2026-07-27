@@ -258,37 +258,66 @@ def inventario_completo():
 
 @app.route("/api/inventario/ajuste", methods=["POST"])
 def ajuste_inventario():
-    """Establece cantidad absoluta para una combinación dada (ingreso inicial / corrección)."""
+    """Establece la cantidad real (absoluta) para una combinación dada
+    (ingreso inicial / corrección) y registra el delta resultante en el historial."""
     data = request.get_json(force=True)
-    for field in ["gas_id", "propiedad", "estado", "cantidad"]:
+    for field in ["ubicacion", "entidad_id", "gas_id", "propiedad", "estado", "nueva_cantidad"]:
         if field not in data:
             return jsonify({"error": f"Campo requerido: {field}"}), 400
 
-    ubicacion  = data.get("ubicacion", "bodega")
-    entidad_id = int(data.get("entidad_id", BODEGA_ID))
-    gas_id     = int(data["gas_id"])
-    propiedad  = data["propiedad"]
-    estado     = data["estado"]
-    cantidad   = int(data["cantidad"])
-    notas      = data.get("notas", "Ajuste manual")
+    ubicacion = data["ubicacion"]
+    propiedad = data["propiedad"]
+    estado    = data["estado"]
 
-    if cantidad < 0:
-        return jsonify({"error": "La cantidad no puede ser negativa"}), 400
+    try:
+        entidad_id     = int(data["entidad_id"])
+        gas_id         = int(data["gas_id"])
+        nueva_cantidad = int(data["nueva_cantidad"])
+    except (TypeError, ValueError):
+        return jsonify({"error": "entidad_id, gas_id y nueva_cantidad deben ser números enteros"}), 400
+
+    if nueva_cantidad < 0:
+        return jsonify({"error": "nueva_cantidad no puede ser negativa"}), 400
 
     db = get_db()
     try:
-        db.execute(
-            """INSERT INTO inventario_actual
-                   (ubicacion, entidad_id, gas_id, propiedad, estado, cantidad)
-               VALUES (?, ?, ?, ?, ?, ?)
-               ON CONFLICT(ubicacion, entidad_id, gas_id, propiedad, estado)
-               DO UPDATE SET cantidad = excluded.cantidad""",
-            (ubicacion, entidad_id, gas_id, propiedad, estado, cantidad),
+        cur = db.cursor()
+
+        # Paso 1: consultar la cantidad actual (0 si la combinación no existe aún)
+        cur.execute(
+            """SELECT cantidad FROM inventario_actual
+               WHERE ubicacion=? AND entidad_id=? AND gas_id=? AND propiedad=? AND estado=?""",
+            (ubicacion, entidad_id, gas_id, propiedad, estado),
         )
-        _registrar_historial(db, "ajuste_inventario", None, entidad_id,
-                             gas_id, propiedad, estado, cantidad, notas)
+        row = cur.fetchone()
+        cantidad_actual = row["cantidad"] if row else 0
+
+        # Paso 2: fijar el saldo exactamente en nueva_cantidad
+        cur.execute(
+            """INSERT OR REPLACE INTO inventario_actual
+                   (ubicacion, entidad_id, gas_id, propiedad, estado, cantidad)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (ubicacion, entidad_id, gas_id, propiedad, estado, nueva_cantidad),
+        )
+
+        # Paso 3: auditoría — registra el delta, no el saldo absoluto
+        delta = nueva_cantidad - cantidad_actual
+        notas = f"Ajuste manual: Inventario anterior {cantidad_actual}, nuevo {nueva_cantidad}"
+        cur.execute(
+            """INSERT INTO historial_movimientos
+                   (tipo_movimiento, entidad_origen_id, entidad_destino_id,
+                    gas_id, propiedad, estado_movido, cantidad, notas)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            ("ajuste_inventario", None, entidad_id, gas_id, propiedad, estado, delta, notas),
+        )
+
         db.commit()
-        return jsonify({"ok": True})
+        return jsonify({
+            "ok": True,
+            "cantidad_anterior": cantidad_actual,
+            "cantidad_nueva": nueva_cantidad,
+            "delta": delta,
+        })
     except Exception as e:
         db.rollback()
         return jsonify({"error": str(e)}), 500
