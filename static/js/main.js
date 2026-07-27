@@ -458,10 +458,110 @@ const App = (() => {
     onTipoChange();
   }
 
+  // ── MODAL: AJUSTE / CORRECCIÓN RÁPIDA DE STOCK ──────────────────────────────
+  // Acceso directo desde Inventario al mismo endpoint que usa el formulario
+  // de Movimientos > Ajuste, para no obligar a cambiar de pestaña.
+
+  function initModal() {
+    const overlay = el('modal-ajuste');
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeAjusteModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) closeAjusteModal();
+    });
+  }
+
+  function openAjusteModal() {
+    fillSelect('modal-gas', state.gases, 'id', 'nombre');
+    el('modal-ubicacion').value = 'bodega';
+    el('modal-propiedad').value = 'propio';
+    el('modal-estado').value = 'lleno';
+    el('modal-cantidad').value = '';
+    onModalUbicacionChange();
+
+    const overlay = el('modal-ajuste');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeAjusteModal() {
+    const overlay = el('modal-ajuste');
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    el('form-ajuste-modal').reset();
+  }
+
+  function onModalUbicacionChange() {
+    const ubicacion = val('modal-ubicacion');
+    const entidadSel = el('modal-entidad');
+    if (ubicacion === 'bodega') {
+      entidadSel.innerHTML = '<option value="0">Bodega JCM</option>';
+      entidadSel.disabled = true;
+    } else {
+      entidadSel.disabled = false;
+      const lista = ubicacion === 'cliente' ? state.clientes : state.proveedores;
+      fillSelect('modal-entidad', lista, 'id', 'nombre');
+    }
+  }
+
+  function buildAjustePayload() {
+    const ubicacion  = val('modal-ubicacion');
+    const entidad_id = ubicacion === 'bodega' ? 0 : ival('modal-entidad');
+    const gas_id      = ival('modal-gas');
+    const propiedad   = val('modal-propiedad');
+    const estado      = val('modal-estado');
+    const cantidad    = ival('modal-cantidad');
+
+    if (isNaN(entidad_id)) throw new Error('Seleccione una entidad válida.');
+    if (isNaN(gas_id))     throw new Error('Seleccione un gas válido.');
+    if (isNaN(cantidad) || cantidad < 0) throw new Error('Ingrese una cantidad válida (0 o mayor).');
+
+    // El backend (/api/inventario/ajuste) espera la llave "cantidad".
+    return { ubicacion, entidad_id, gas_id, propiedad, estado, cantidad };
+  }
+
+  async function submitAjusteModal(e) {
+    e.preventDefault();
+
+    let payload;
+    try {
+      payload = buildAjustePayload();
+    } catch (err) {
+      toast(err.message, 'warn');
+      return;
+    }
+
+    const btn = el('btn-modal-ajuste-submit');
+    const labelOrig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+
+    try {
+      const res = await fetch('/api/inventario/ajuste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Error HTTP ${res.status}`);
+
+      toast('Stock ajustado correctamente');
+      closeAjusteModal();
+      await refreshInventario();
+    } catch (err) {
+      toast('No se pudo guardar el ajuste: ' + err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = labelOrig;
+    }
+  }
+
   // ── INICIALIZACIÓN ────────────────────────────────────────────────────────
   async function init() {
     initNav();
     initFilters();
+    initModal();
     updateClock();
     setInterval(updateClock, 30_000);
     await loadCatalogos();
@@ -480,6 +580,10 @@ const App = (() => {
     submitMovimiento,
     submitNuevoCliente,
     resetForm,
+    openAjusteModal,
+    closeAjusteModal,
+    onModalUbicacionChange,
+    submitAjusteModal,
   };
 
 })();
