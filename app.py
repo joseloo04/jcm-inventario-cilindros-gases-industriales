@@ -4,6 +4,7 @@ import sqlite3
 import threading
 import webbrowser
 from flask import Flask, g, jsonify, request, render_template
+from werkzeug.serving import make_server
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -530,6 +531,48 @@ def get_historial():
     return jsonify([dict(r) for r in rows])
 
 # ---------------------------------------------------------------------------
+# Routes — apagado seguro de la aplicación
+# ---------------------------------------------------------------------------
+# _httpd guarda la referencia al servidor werkzeug real (creado en el bloque
+# __main__ con make_server). Se necesita esa referencia, y no app.run(), para
+# poder detener el servidor de forma limpia desde una petición HTTP: la API
+# antigua (environ['werkzeug.server.shutdown']) fue removida de Werkzeug.
+# ---------------------------------------------------------------------------
+
+_httpd = None
+
+
+def _graceful_shutdown():
+    """Ejecuta en un hilo aparte para no bloquear la respuesta HTTP del endpoint.
+
+    Orden estricto:
+      a) Checkpoint + cierre seguro de la conexión SQLite (evita corrupción /
+         escrituras pendientes en el WAL).
+      b) Detener el servidor werkzeug (server.shutdown() rompe el bucle
+         serve_forever() del hilo principal).
+      c) El hilo principal cierra el socket (server_close()) y termina el
+         proceso con sys.exit(0) — ver bloque __main__.
+    """
+    import time
+    time.sleep(0.3)  # deja que la respuesta HTTP ya enviada llegue al cliente
+
+    try:
+        conn = sqlite3.connect(get_db_path())
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        conn.close()
+    except Exception:
+        pass
+
+    if _httpd is not None:
+        _httpd.shutdown()
+
+
+@app.route("/api/shutdown", methods=["POST"])
+def shutdown():
+    threading.Thread(target=_graceful_shutdown, daemon=True).start()
+    return jsonify({"ok": True, "message": "Apagando servidor..."})
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -543,4 +586,11 @@ if __name__ == "__main__":
     init_db()
     if not os.environ.get("WERKZEUG_RUN_MAIN"):
         threading.Thread(target=open_browser, daemon=True).start()
-    app.run(host="127.0.0.1", port=5000, debug=False)
+
+    _httpd = make_server("127.0.0.1", 5000, app, threaded=True)
+    try:
+        _httpd.serve_forever()
+    finally:
+        _httpd.server_close()  # libera el puerto 5000 explícitamente (SO_REUSEADDR ya está activo por defecto)
+
+    sys.exit(0)

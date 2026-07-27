@@ -462,13 +462,13 @@ const App = (() => {
   // Acceso directo desde Inventario al mismo endpoint que usa el formulario
   // de Movimientos > Ajuste, para no obligar a cambiar de pestaña.
 
-  function initModal() {
-    const overlay = el('modal-ajuste');
+  function initModalOverlay(overlayId, closeFn) {
+    const overlay = el(overlayId);
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) closeAjusteModal();
+      if (e.target === overlay) closeFn();
     });
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && overlay.classList.contains('show')) closeAjusteModal();
+      if (e.key === 'Escape' && overlay.classList.contains('show')) closeFn();
     });
   }
 
@@ -556,11 +556,49 @@ const App = (() => {
     }
   }
 
+  // ── MODAL: CERRAR APLICACIÓN (GRACEFUL SHUTDOWN) ────────────────────────────
+
+  function openShutdownModal() {
+    el('shutdown-msg').textContent = '¿Estás seguro de que deseas cerrar la aplicación y apagar el servidor?';
+    el('btn-shutdown-cancel').disabled = false;
+    el('btn-shutdown-confirm').disabled = false;
+    el('btn-shutdown-confirm').textContent = 'Sí, cerrar';
+
+    const overlay = el('modal-shutdown');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeShutdownModal() {
+    const overlay = el('modal-shutdown');
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  async function confirmShutdown() {
+    el('btn-shutdown-cancel').disabled = true;
+    const btn = el('btn-shutdown-confirm');
+    btn.disabled = true;
+    btn.textContent = 'Apagando…';
+    el('shutdown-msg').textContent = 'Apagando servidor…';
+
+    try {
+      await fetch('/api/shutdown', { method: 'POST' });
+    } catch (err) {
+      // El servidor puede cortar la conexión justo al apagarse; se asume éxito.
+    }
+
+    el('shutdown-msg').textContent = 'Servidor apagado. Ya puedes cerrar esta ventana.';
+    btn.textContent = 'Cerrado';
+    window.close(); // solo funciona si la pestaña fue abierta por script; si no, no hace nada
+  }
+
   // ── INICIALIZACIÓN ────────────────────────────────────────────────────────
   async function init() {
     initNav();
     initFilters();
-    initModal();
+    initModalOverlay('modal-ajuste', closeAjusteModal);
+    initModalOverlay('modal-shutdown', closeShutdownModal);
     updateClock();
     setInterval(updateClock, 30_000);
     await loadCatalogos();
@@ -583,6 +621,9 @@ const App = (() => {
     closeAjusteModal,
     onModalUbicacionChange,
     submitAjusteModal,
+    openShutdownModal,
+    closeShutdownModal,
+    confirmShutdown,
   };
 
 })();

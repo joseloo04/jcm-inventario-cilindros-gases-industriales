@@ -18,6 +18,9 @@
     </div>
   </div>
   <span class="header-clock" id="fecha-hora"></span>
+  <button class="btn-shutdown" id="btn-shutdown" onclick="App.openShutdownModal()" title="Cerrar aplicación">
+    &#x23FB; Cerrar Aplicaci&#xF3;n
+  </button>
 </header>
 
 <!-- ══ NAV ═════════════════════════════════════════════════════════════════ -->
@@ -336,6 +339,27 @@
         <button type="submit" class="btn btn-primary" id="btn-modal-ajuste-submit">Guardar Ajuste</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ══ MODAL: CERRAR APLICACIÓN ════════════════════════════════════════════════ -->
+<div id="modal-shutdown" class="modal-overlay" aria-hidden="true">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-shutdown-title">
+    <div class="modal-header">
+      <h3 id="modal-shutdown-title" class="modal-title">&#x23FB; Cerrar Aplicaci&#xF3;n</h3>
+      <button type="button" class="modal-close" onclick="App.closeShutdownModal()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <p id="shutdown-msg">
+        &#xBF;Est&#xE1;s seguro de que deseas cerrar la aplicaci&#xF3;n y apagar el servidor?
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="btn-shutdown-cancel" onclick="App.closeShutdownModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="btn-shutdown-confirm" onclick="App.confirmShutdown()">S&#xED;, cerrar</button>
+    </div>
   </div>
 </div>
 

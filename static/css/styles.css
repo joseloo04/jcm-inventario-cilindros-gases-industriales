@@ -84,6 +84,23 @@ body {
 .brand-sub   { display: block; font-size: .73rem; opacity: .82; }
 .header-clock { margin-left: auto; font-size: .78rem; opacity: .85; white-space: nowrap; }
 
+.btn-shutdown {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: var(--r-sm);
+  color: #fff;
+  padding: .35rem .75rem;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.btn-shutdown:hover { background: rgba(255,255,255,.28); }
+
 /* ── NAV ──────────────────────────────────────────────────────────────────── */
 .site-nav {
   background: var(--blanco);
@@ -456,6 +473,8 @@ td.col-num {
   overflow-y: auto;
   animation: modal-in .18s ease;
 }
+
+.modal-sm { max-width: 400px; }
 
 @keyframes modal-in {
   from { opacity: 0; transform: translateY(10px) scale(.98); }
