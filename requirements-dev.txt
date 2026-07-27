@@ -1,0 +1,11 @@
+# ==============================================================================
+# Dependencias de desarrollo / empaquetado
+# Solo necesarias para generar el ejecutable (.exe) con PyInstaller.
+# Instalar además de requirements.txt:
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# ==============================================================================
+
+-r requirements.txt
+pyinstaller>=6.0,<7.0

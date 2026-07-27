@@ -1,0 +1,72 @@
+# ==============================================================================
+# JCM - Inventario de Cilindros de Gases Industriales
+# Dependencias del proyecto (Python 3.9+)
+# ==============================================================================
+#
+# INSTALACIÓN
+# ------------------------------------------------------------------------------
+#
+# 1) macOS
+#    ------------------------------------------------------------------------
+#    # Verificar que Python 3 esté instalado (o instalarlo con Homebrew)
+#    python3 --version
+#    brew install python3        # solo si no está instalado
+#
+#    # Crear y activar un entorno virtual
+#    python3 -m venv venv
+#    source venv/bin/activate
+#
+#    # Instalar dependencias
+#    pip install -r requirements.txt
+#
+#    # Desactivar el entorno virtual cuando termines
+#    deactivate
+#
+# 2) Windows (PowerShell o CMD)
+#    ------------------------------------------------------------------------
+#    # Verificar que Python 3 esté instalado
+#    python --version
+#
+#    # Crear el entorno virtual
+#    python -m venv venv
+#
+#    # Activar el entorno virtual
+#    venv\Scripts\activate.bat        REM (CMD)
+#    venv\Scripts\Activate.ps1        # (PowerShell)
+#
+#    # Si PowerShell bloquea la activación por política de ejecución:
+#    # Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+#
+#    # Instalar dependencias
+#    pip install -r requirements.txt
+#
+#    # Desactivar el entorno virtual cuando termines
+#    deactivate
+#
+# 3) Conda (macOS / Windows / Linux)
+#    ------------------------------------------------------------------------
+#    # Crear un entorno con Python 3.11
+#    conda create -n jcm-inventario python=3.11
+#
+#    # Activar el entorno
+#    conda activate jcm-inventario
+#
+#    # Instalar dependencias con pip dentro del entorno conda
+#    pip install -r requirements.txt
+#
+#    # Desactivar el entorno cuando termines
+#    conda deactivate
+#
+# EJECUCIÓN
+# ------------------------------------------------------------------------------
+#    python app.py
+#
+# EMPAQUETADO (generar el .exe con PyInstaller)
+# ------------------------------------------------------------------------------
+#    pip install -r requirements-dev.txt
+#    pyinstaller --onefile --noconsole --name "JCM_Inventario" \
+#        --add-data "templates;templates" --add-data "static;static" app.py
+#
+# ==============================================================================
+
+Flask>=3.0.0,<4.0.0
