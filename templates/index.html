@@ -18,6 +18,9 @@
     </div>
   </div>
   <span class="header-clock" id="fecha-hora"></span>
+  <button class="btn-shutdown" id="btn-shutdown" onclick="App.openShutdownModal()" title="Cerrar aplicación">
+    &#x23FB; Cerrar Aplicaci&#xF3;n
+  </button>
 </header>
 
 <!-- ══ NAV ═════════════════════════════════════════════════════════════════ -->
@@ -35,7 +38,10 @@
   <section id="sec-inventario" class="section active">
     <div class="section-header">
       <h2 class="section-title">Estado del Inventario</h2>
-      <button class="btn btn-secondary btn-sm" onclick="App.refreshInventario()">&#x21BB; Actualizar</button>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn btn-primary" onclick="App.openAjusteModal()">&#x270F;&#xFE0F; Ajustar / Corregir Stock</button>
+        <button class="btn btn-secondary btn-sm" onclick="App.refreshInventario()">&#x21BB; Actualizar</button>
+      </div>
     </div>
 
     <!-- Resumen de bodega -->
@@ -270,6 +276,92 @@
 
 <!-- Toast de notificaciones -->
 <div id="toast" class="toast"></div>
+
+<!-- ══ MODAL: AJUSTE / CORRECCIÓN RÁPIDA DE STOCK ═════════════════════════════ -->
+<div id="modal-ajuste" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-ajuste-title">
+    <div class="modal-header">
+      <h3 id="modal-ajuste-title" class="modal-title">&#x270F;&#xFE0F; Ajustar / Corregir Stock</h3>
+      <button type="button" class="modal-close" onclick="App.closeAjusteModal()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <form id="form-ajuste-modal" onsubmit="App.submitAjusteModal(event)">
+      <div class="modal-body">
+        <p class="modal-desc">
+          Establece la cantidad real para una combinaci&oacute;n espec&iacute;fica de ubicaci&oacute;n, gas,
+          propiedad y estado. &Uacute;salo para corregir el stock o registrar el inventario inicial.
+        </p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="modal-ubicacion">Ubicaci&#xF3;n</label>
+            <select id="modal-ubicacion" class="form-select" onchange="App.onModalUbicacionChange()">
+              <option value="bodega">Bodega</option>
+              <option value="cliente">Cliente</option>
+              <option value="proveedor">Proveedor</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-entidad">Entidad</label>
+            <select id="modal-entidad" class="form-select"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-gas">Gas</label>
+            <select id="modal-gas" class="form-select"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-propiedad">Propiedad</label>
+            <select id="modal-propiedad" class="form-select">
+              <option value="propio">Propio</option>
+              <option value="arrendado">Arrendado</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-estado">Estado</label>
+            <select id="modal-estado" class="form-select">
+              <option value="lleno">Lleno</option>
+              <option value="vacio">Vac&#xED;o</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-cantidad">Nueva Cantidad Real</label>
+            <input type="number" id="modal-cantidad" class="form-input" min="0" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="App.closeAjusteModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="btn-modal-ajuste-submit">Guardar Ajuste</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ MODAL: CERRAR APLICACIÓN ════════════════════════════════════════════════ -->
+<div id="modal-shutdown" class="modal-overlay" aria-hidden="true">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-shutdown-title">
+    <div class="modal-header">
+      <h3 id="modal-shutdown-title" class="modal-title">&#x23FB; Cerrar Aplicaci&#xF3;n</h3>
+      <button type="button" class="modal-close" onclick="App.closeShutdownModal()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <p id="shutdown-msg">
+        &#xBF;Est&#xE1;s seguro de que deseas cerrar la aplicaci&#xF3;n y apagar el servidor?
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="btn-shutdown-cancel" onclick="App.closeShutdownModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="btn-shutdown-confirm" onclick="App.confirmShutdown()">S&#xED;, cerrar</button>
+    </div>
+  </div>
+</div>
 
 <script src="/static/js/main.js"></script>
 </body>

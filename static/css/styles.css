@@ -84,6 +84,23 @@ body {
 .brand-sub   { display: block; font-size: .73rem; opacity: .82; }
 .header-clock { margin-left: auto; font-size: .78rem; opacity: .85; white-space: nowrap; }
 
+.btn-shutdown {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: var(--r-sm);
+  color: #fff;
+  padding: .35rem .75rem;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.btn-shutdown:hover { background: rgba(255,255,255,.28); }
+
 /* ── NAV ──────────────────────────────────────────────────────────────────── */
 .site-nav {
   background: var(--blanco);
@@ -432,6 +449,75 @@ td.col-num {
 .toast.ok   { background: var(--verde); }
 .toast.err  { background: var(--rojo-dark); }
 .toast.warn { background: var(--naranja); }
+
+/* ── MODAL ────────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(33,33,33,.55);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--blanco);
+  border-radius: var(--r);
+  box-shadow: var(--sombra-md);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modal-in .18s ease;
+}
+
+.modal-sm { max-width: 400px; }
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.modal-title { font-size: 1rem; font-weight: 700; color: var(--rojo); }
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--gris-medio);
+  cursor: pointer;
+  padding: .1rem .5rem;
+  border-radius: var(--r-sm);
+}
+.modal-close:hover { background: var(--gris-claro); color: var(--texto); }
+
+.modal-body { padding: 1.25rem; }
+
+.modal-desc {
+  font-size: .82rem;
+  color: var(--texto-sec);
+  margin-bottom: 1.1rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gris-borde);
+}
 
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
