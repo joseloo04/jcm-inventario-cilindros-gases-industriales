@@ -24,6 +24,10 @@ conda-env/
 *.db
 *.sqlite
 *.sqlite3
+# Archivos satélite de SQLite en modo WAL (app.py usa PRAGMA journal_mode=WAL)
+*.db-wal
+*.db-shm
+*.db-journal
 
 # ── PyInstaller ───────────────────────────────────────────────────────────────
 build/
